@@ -1,0 +1,23 @@
+{
+  "name": "angular-autodisable",
+  "version": "0.0.1",
+  "description": "autodisable directive for angular.js",
+  "homepage": "http://github.com/kirstein/angular-autodisable",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kirstein/angular-autodisable.git"
+  },
+  "author": "Mikk Kirstein",
+  "license": "MIT",
+  "devDependencies": {
+    "karma": "~0.8.5",
+    "grunt": "~0.4.1",
+    "grunt-karma": "~0.4.4",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-banner": "~0.1.4"
+  }
+}

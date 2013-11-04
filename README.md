@@ -1,0 +1,3 @@
+# angular-autodisable [![Build Status](https://travis-ci.org/kirstein/angular-autodisable.png)](https://travis-ci.org/kirstein/angular-autodisable)
+
+# Work in progress...
