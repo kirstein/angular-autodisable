@@ -7,20 +7,25 @@
 (function (angular) {
   'use strict';
 
-  return angular.module('ngAutodisableModule', []).directive('ngClick', [ '$parse', function($parse) {
+  return angular.module('ngAutodisableModule', []).directive('ngClick', [ '$parse', '$q', function($parse, $q) {
 
     var EVENT    = 'click',     // Binding event
         DISABLED = 'disabled';  // Disabled attribute
 
     /**
-     * Validate that the input is a promise.
-     * Currently only works on HTTP promises....
-     *
      * @param {Object} result unknown result
-     * @return {Boolean} true if promise, otherwise false
+     * @return {Boolean} true if httppromise, otherwise false
      */
-    function isPromise(result) {
+    function isHTTPPromise(result) {
       return angular.isFunction(result.success) && angular.isFunction(result.error);
+    }
+
+    /**
+     * @param {Object} result unknown result
+     * @return {Boolean} true if $q promise, otherwise false
+     */
+    function isQPromise(result) {
+      return angular.isFunction(result.then);
     }
 
     /**
@@ -41,19 +46,40 @@
     }
 
     /**
+     * Wraps promises to $q promise.
+     * Always returns a new promise!
+     *
+     * @param {HTTPPromise|Promise} promise promise to wrap
+     * @return {Promise} $q promise
+     */
+    function wrapPromise(promise) {
+      var defer = $q.defer();
+
+      if (isHTTPPromise(promise)) {
+        promise.success(defer.resolve).error(defer.reject);
+      } else {
+        promise.then(defer.success, defer.reject);
+      }
+
+      return defer.promise;
+    }
+
+    /**
      * Handle disabled style.
      * Will attach the disabled style from get-go and remove it after the promise is resolved.
      *
-     * @param {HTTPPromise} result promise
+     * @param {HTTPPromise|Promise} result promise
      * @param {Object} attrs attributes
      */
     function handleDisabled(result, attrs) {
       setDisabled(attrs, true);
 
-      result.success(function() {
-        setDisabled(attrs, false);
-      }).error(function() {
-        setDisabled(attrs, false);
+      // Wrap the promise and on each return case
+      // lets release the disable
+      wrapPromise(result).then(function() {
+        setDisabled(attrs);
+      }, function() {
+        setDisabled(attrs);
       });
     }
 
@@ -70,7 +96,7 @@
 
             // If the autodisable "keyword" is set and the result is a promise
             // then lets handle the disabled style
-            if (hasAutodisable(attrs) && isPromise(result)) {
+            if (hasAutodisable(attrs) && (isQPromise(result) || isHTTPPromise(result))) {
               handleDisabled(result, attrs);
             }
           });
