@@ -7,19 +7,6 @@
 (function (angular) {
   'use strict';
 
-  /**
-   * Wraps a given function in callback
-   *
-   * @param {Function} fn function to wrap
-   * @return {Function} closure
-   */
-  function wrap(fn) {
-    var args = [].slice.call(arguments, 1);
-    return function () {
-      return fn.apply(null, args);
-    };
-  }
-
   return angular.module('ngAutodisableModule', []).directive('ngClick', [ '$parse', function($parse) {
 
     var EVENT    = 'click',     // Binding event
@@ -33,7 +20,7 @@
      * @return {Boolean} true if promise, otherwise false
      */
     function isPromise(result) {
-      return (angular.isFunction(result.success) && angular.isFunction(result.error));
+      return angular.isFunction(result.success) && angular.isFunction(result.error);
     }
 
     /**
@@ -49,8 +36,8 @@
     /**
      * @param {Object} attr attributes
      */
-    function toggleDisabled(attrs) {
-      attrs.$set(DISABLED, !attrs[DISABLED]);
+    function setDisabled(attrs, value) {
+      attrs.$set(DISABLED, value);
     }
 
     /**
@@ -61,9 +48,13 @@
      * @param {Object} attrs attributes
      */
     function handleDisabled(result, attrs) {
-      toggleDisabled(attrs);
-      result.success(wrap(toggleDisabled, attrs))
-            .error(wrap(toggleDisabled, attrs));
+      setDisabled(attrs, true);
+
+      result.success(function() {
+        setDisabled(attrs, false);
+      }).error(function() {
+        setDisabled(attrs, false);
+      });
     }
 
     return {
@@ -75,17 +66,14 @@
           // Remove the click handler and replace it with our new one
           // with this move we completely disable the original ngClick functionality
           element.off(EVENT).on(EVENT, function() {
-            scope.$apply(function() {
-              var result = fn(scope, { $event : EVENT });
+            var result = fn(scope, { $event : EVENT });
 
-              // If the autodisable "keyword" is set and the result is a promise
-              // then lets handle the disabled style
-              if (hasAutodisable(attrs) && isPromise(result)) {
-                handleDisabled(result, attrs);
-              }
-            });
+            // If the autodisable "keyword" is set and the result is a promise
+            // then lets handle the disabled style
+            if (hasAutodisable(attrs) && isPromise(result)) {
+              handleDisabled(result, attrs);
+            }
           });
-
         };
       }
     };
