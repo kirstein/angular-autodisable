@@ -141,7 +141,6 @@
 
     return {
       restrict : 'A',
-      priority : 100,
       compile  : function(el, attrs) {
         if (!attrs.hasOwnProperty('ngClick')) {
           throw new Error('ngAutodisable requires ngClick attribute in order to work');
