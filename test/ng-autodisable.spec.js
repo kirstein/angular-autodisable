@@ -166,8 +166,6 @@ describe('angular autodisable', function() {
         $httpBackend.flush();
         expect(el.attr('disabled')).not.toBeDefined();
       }));
-
-
     });
 
     describe('$q promise', function() {
