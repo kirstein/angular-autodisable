@@ -1,10 +1,19 @@
 (function (angular) {
   'use strict';
 
-  return angular.module('ngAutodisable', []).directive('ngClick', [ '$parse', function($parse) {
+  return angular.module('ngAutodisable', [])
+
+  /**
+   * Overwrites ngClick directive if the `ngClick` and `ngAutodisable` directives are both on the same element
+   * then will evaluate the click response and check if its a promise or not
+   * if it happens to be a promise then will set `disabled` as true for as long as the promise is fulfilled
+   *
+   * @throws error if the `ngAutodisable` is on the element without the `ngClick` directive.
+   */
+  .directive('ngAutodisable', [ '$parse', function($parse) {
     var EVENT    = 'click',         // Binding event
         DISABLED = 'disabled',      // Disabled attribute
-        ATTRNAME = 'ngAutodisable'; // The main attributes name
+        ATTRNAME = 'ngAutodisable'; // The attribute name to which we store the handlers ids
 
     // Id for the registered handlers.
     // Will be incremented in order to make sure that handler is uniquely registered
@@ -21,16 +30,6 @@
       return promise                          &&
              angular.isFunction(promise.then) &&
              angular.isFunction(promise['finally']);
-    }
-
-    /**
-     * Checks if the attributes have the `ngAutodisable` attribute
-     *
-     * @param {Object} attrs attributes
-     * @return {Boolean} true/false
-     */
-    function hasAutodisable(attrs) {
-      return ATTRNAME in attrs;
     }
 
     /**
@@ -105,9 +104,10 @@
     function triggerHandler(scope, attrs, fn) {
       var result = fn(scope, { $event : EVENT });
 
-      // If the autodisable "keyword" is set and the result is a promise
-      // then lets handle the disabled style
-      if (hasAutodisable(attrs) && isPromise(result)) {
+      // If the function result happens to be a promise
+      // then handle the `disabled` state of the element.
+      // registers the result handler as an attribute
+      if (isPromise(result)) {
         handlePromise(result, attrs, registerPromise(attrs));
       }
     }
@@ -137,6 +137,10 @@
       restrict : 'A',
       priority : 100,
       compile  : function(el, attrs) {
+        if (!attrs.hasOwnProperty('ngClick')) {
+          throw new Error('ngAutodisable requires ngClick attribute in order to work');
+        }
+
         var handlers = attrs.ngClick.split(';').map($parse);
         return linkFn.bind(null, handlers);
       }

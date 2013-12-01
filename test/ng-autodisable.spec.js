@@ -23,6 +23,12 @@ describe('angular autodisable', function() {
       return el;
     }
 
+    it('should throw if no ng-click is defined', function() {
+      expect(function() {
+        compile('<button ng-autodisable></button>');
+      }).toThrow('ngAutodisable requires ngClick attribute in order to work');
+    });
+
     it('should only call the handler once', function() {
       $rootScope.clickHandler = jasmine.createSpy();
       var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
