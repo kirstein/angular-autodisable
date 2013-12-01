@@ -13,19 +13,16 @@
         DISABLED = 'disabled';  // Disabled attribute
 
     /**
-     * @param {Object} result unknown result
-     * @return {Boolean} true if httppromise, otherwise false
+     * Validates if the given promise is really a promise that we can use.
+     * Out promises must have at least `then` and `finally` functions
+     *
+     * @param {Object} promise promise to test
+     * @return {Boolean} true if its a promise, otherwise false
      */
-    function isHTTPPromise(result) {
-      return angular.isFunction(result.success) && angular.isFunction(result.error);
-    }
-
-    /**
-     * @param {Object} result unknown result
-     * @return {Boolean} true if $q promise, otherwise false
-     */
-    function isQPromise(result) {
-      return angular.isFunction(result.then);
+    function isPromise(promise) {
+      return promise                          &&
+             angular.isFunction(promise.then) &&
+             angular.isFunction(promise['finally']);
     }
 
     /**
@@ -46,61 +43,52 @@
     }
 
     /**
-     * Wraps promises to $q promise.
-     * Always returns a new promise!
-     *
-     * @param {HTTPPromise|Promise} promise promise to wrap
-     * @return {Promise} $q promise
-     */
-    function wrapPromise(promise) {
-      var defer = $q.defer();
-
-      if (isHTTPPromise(promise)) {
-        promise.success(defer.resolve).error(defer.reject);
-      } else {
-        promise.then(defer.success, defer.reject);
-      }
-
-      return defer.promise;
-    }
-
-    /**
      * Handle disabled style.
      * Will attach the disabled style from get-go and remove it after the promise is resolved.
      *
-     * @param {HTTPPromise|Promise} result promise
+     * @param {Promise} promise promise
      * @param {Object} attrs attributes
      */
-    function handleDisabled(result, attrs) {
+    function handleDisabled(promise, attrs) {
       setDisabled(attrs, true);
 
       // Wrap the promise and on each return case
-      // lets release the disable
-      wrapPromise(result).then(function() {
+      // since finally is reserved word we must use string notation to call the function
+      promise['finally'](function() {
         setDisabled(attrs);
-      }, function() {
-        setDisabled(attrs);
+      });
+    }
+
+    /**
+     * The link function for this directive.
+     * Contains a prepended function that represents the ngClick handler.
+     *
+     * @param {Function} fn click handler
+     * @param {Object} scope scope
+     * @param {Angular Element} element directive element
+     * @param {Object} attrs attributes
+     */
+    function linkFn(fn, scope, element, attrs) {
+
+      // Remove the click handler and replace it with our new one
+      // with this move we completely disable the original ngClick functionality
+      element.unbind(EVENT).bind(EVENT, function() {
+
+        var result = fn(scope, { $event : EVENT });
+
+        // If the autodisable "keyword" is set and the result is a promise
+        // then lets handle the disabled style
+        if (hasAutodisable(attrs) && isPromise(result)) {
+          handleDisabled(result, attrs);
+        }
       });
     }
 
     return {
       restrict : 'A',
+      priority : 100,
       compile  : function(el, attr) {
-        var fn = $parse(attr.ngClick);
-        return function(scope, element, attrs) {
-
-          // Remove the click handler and replace it with our new one
-          // with this move we completely disable the original ngClick functionality
-          element.off(EVENT).on(EVENT, function() {
-            var result = fn(scope, { $event : EVENT });
-
-            // If the autodisable "keyword" is set and the result is a promise
-            // then lets handle the disabled style
-            if (hasAutodisable(attrs) && (isQPromise(result) || isHTTPPromise(result))) {
-              handleDisabled(result, attrs);
-            }
-          });
-        };
+        return linkFn.bind(null, $parse(attr.ngClick));
       }
     };
   }]);
