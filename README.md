@@ -35,7 +35,7 @@ If thats done then just follow those simple steps:
 ### Demo
 ---
 
-A quick demo is available at [jsfiddle](http://jsfiddle.net/kirstein/wXnks/)
+A quick demo is available at [jsfiddle](http://jsfiddle.net/kirstein/wXnks/embedded/result/)
 
 ### How it works
 ---
