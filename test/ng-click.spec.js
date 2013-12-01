@@ -1,9 +1,9 @@
-/* global describe,it,expect,inject,beforeEach */
+/* global describe,it,expect,inject */
 describe('ngClick', function() {
   'use strict';
   var element;
 
-  beforeEach(module('ngAutodisableModule'));
+  beforeEach(module('ngAutodisable'));
 
   it('should get called on a click', inject(function($rootScope, $compile) {
     element = $compile('<div ng-click="clicked = true"></div>')($rootScope);

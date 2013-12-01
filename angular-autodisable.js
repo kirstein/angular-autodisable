@@ -7,7 +7,7 @@
 (function (angular) {
   'use strict';
 
-  return angular.module('ngAutodisableModule', []).directive('ngClick', [ '$parse', '$q', function($parse, $q) {
+  return angular.module('ngAutodisable', []).directive('ngClick', [ '$parse', function($parse) {
 
     var EVENT    = 'click',     // Binding event
         DISABLED = 'disabled';  // Disabled attribute
