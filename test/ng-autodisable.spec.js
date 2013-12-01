@@ -25,7 +25,7 @@ describe('angular autodisable', function() {
 
     it('should only call the handler once', function() {
       $rootScope.clickHandler = jasmine.createSpy();
-      var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+      var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
       el.click();
       expect($rootScope.clickHandler.callCount).toBe(1);
     });
@@ -34,8 +34,8 @@ describe('angular autodisable', function() {
       $rootScope.clickHandler = function() {
         $rootScope.data = 'hello';
       };
-      var el = compile('<div><a ng-click="clickHandler()" ng-autodisable></a><span>{{ data }}</span></div>');
-      el.find('a').click();
+      var el = compile('<div><button ng-click="clickHandler()" ng-autodisable></button><span>{{ data }}</span></div>');
+      el.find('button').click();
       expect(el.find('span').text()).toEqual('hello');
     });
 
@@ -43,7 +43,7 @@ describe('angular autodisable', function() {
       it('should trigger both handlers', function() {
         $rootScope.firstHandler  = jasmine.createSpy();
         $rootScope.secondHandler = jasmine.createSpy();
-        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
         el.click();
         expect($rootScope.firstHandler).toHaveBeenCalled();
         expect($rootScope.secondHandler).toHaveBeenCalled();
@@ -54,8 +54,8 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           $rootScope.data = 'hello';
         };
-        var el = compile('<div><a ng-click="firstHandler();secondHandler()" ng-autodisable></a><span>{{ data }}</span></div>');
-        el.find('a').click();
+        var el = compile('<div><button ng-click="firstHandler();secondHandler()" ng-autodisable></button><span>{{ data }}</span></div>');
+        el.find('button').click();
         expect(el.find('span').text()).toEqual('hello');
       });
 
@@ -65,7 +65,7 @@ describe('angular autodisable', function() {
           var defer = $q.defer();
           return defer.promise;
         };
-        var el = compile('<a ng-click="defaultHandler();promiseHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="defaultHandler();promiseHandler()" ng-autodisable></button>');
         el.click();
         expect(el.attr('disabled')).toBeDefined();
       }));
@@ -79,7 +79,7 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           return defer2.promise;
         };
-        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
         el.click();
 
         defer2.resolve();
@@ -97,7 +97,7 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           return defer2.promise;
         };
-        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
         el.click();
 
         defer2.resolve();
@@ -115,7 +115,7 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           return defer2.promise;
         };
-        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
         el.click();
 
         defer2.resolve();
@@ -133,7 +133,7 @@ describe('angular autodisable', function() {
           $httpBackend.expectGET('/').respond(200);
           return $http.get('/');
         };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         expect(el.attr('disabled')).toBeDefined();
         $httpBackend.flush();
@@ -144,7 +144,7 @@ describe('angular autodisable', function() {
           $httpBackend.expectGET('/').respond(200);
           return $http.get('/');
         };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         $httpBackend.flush();
         expect(el.attr('disabled')).not.toBeDefined();
@@ -155,7 +155,7 @@ describe('angular autodisable', function() {
           $httpBackend.expectGET('/').respond(400);
           return $http.get('/');
         };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         $httpBackend.flush();
         expect(el.attr('disabled')).not.toBeDefined();
@@ -170,7 +170,7 @@ describe('angular autodisable', function() {
           var defer = $q.defer();
           return defer.promise;
         };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         expect(el.attr('disabled')).toBeDefined();
       }));
@@ -180,7 +180,7 @@ describe('angular autodisable', function() {
         $rootScope.clickHandler = function() {
           return defer.promise;
         };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         defer.resolve('resolved');
         $rootScope.$apply();
@@ -192,16 +192,16 @@ describe('angular autodisable', function() {
         $rootScope.clickHandler = function() {
           return defer.promise;
         };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         defer.reject('resolved');
         $rootScope.$apply();
         expect(el.attr('disabled')).not.toBeDefined();
       }));
 
-      it('should not disable the button if it does not return a promise', function() {
+      it('should not disable the button if it does not return button promise', function() {
         $rootScope.clickHandler = function() { return true; };
-        var el = compile('<a ng-click="clickHandler()" ng-autodisable></a>');
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         expect(el.attr('disabled')).not.toBeDefined();
       });

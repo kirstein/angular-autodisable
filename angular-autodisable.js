@@ -142,8 +142,8 @@
     return {
       restrict : 'A',
       priority : 100,
-      compile  : function(el, attr) {
-        var handlers = attr.ngClick.split(';').map($parse);
+      compile  : function(el, attrs) {
+        var handlers = attrs.ngClick.split(';').map($parse);
         return linkFn.bind(null, handlers);
       }
     };
