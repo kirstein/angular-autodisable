@@ -67,14 +67,15 @@
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
       element.unbind(EVENT).bind(EVENT, function() {
+        scope.$apply(function() {
+          var result = fn(scope, { $event : EVENT });
 
-        var result = fn(scope, { $event : EVENT });
-
-        // If the autodisable "keyword" is set and the result is a promise
-        // then lets handle the disabled style
-        if (hasAutodisable(attrs) && isPromise(result)) {
-          handleDisabled(result, attrs);
-        }
+          // If the autodisable "keyword" is set and the result is a promise
+          // then lets handle the disabled style
+          if (hasAutodisable(attrs) && isPromise(result)) {
+            handleDisabled(result, attrs);
+          }
+        });
       });
     }
 
