@@ -8,9 +8,13 @@
   'use strict';
 
   return angular.module('ngAutodisable', []).directive('ngClick', [ '$parse', function($parse) {
+    var EVENT    = 'click',         // Binding event
+        DISABLED = 'disabled',      // Disabled attribute
+        ATTRNAME = 'ngAutodisable'; // The main attributes name
 
-    var EVENT    = 'click',     // Binding event
-        DISABLED = 'disabled';  // Disabled attribute
+    // Id for the registered handlers.
+    // Will be incremented in order to make sure that handler is uniquely registered
+    var handlerId = 0;
 
     /**
      * Validates if the given promise is really a promise that we can use.
@@ -32,14 +36,51 @@
      * @return {Boolean} true/false
      */
     function hasAutodisable(attrs) {
-      return 'ngAutodisable' in attrs;
+      return ATTRNAME in attrs;
     }
 
     /**
-     * @param {Object} attr attributes
+     * Unregisters promise from the attributes list.
+     *
+     * @param {Object} attrs attributes
+     * @param {Number} id id of the current promise to unregister
+     * @return {Array} array of remaining ids
      */
-    function setDisabled(attrs, value) {
-      attrs.$set(DISABLED, value);
+    function unregisterPromise(attrs, id) {
+      var ids = attrs[ATTRNAME];
+      ids.splice(ids.indexOf(id), 1);
+      attrs.$set(ATTRNAME, ids);
+      return ids;
+    }
+
+    /**
+     * Register the promise to the attributes list.
+     * Grant its the unique ID
+     *
+     * @param {Object} attrs attributes
+     * @return {Number} registered attribute id
+     */
+    function registerPromise(attrs) {
+      var id = handlerId++;
+      attrs.$set(ATTRNAME, (attrs[ATTRNAME] || []).concat(id));
+      return id;
+    }
+
+
+    /**
+     * Sets disabled property for the element.
+     * If the element contains more unfulfilled promises then it will not allow the element disabled set to false
+     *
+     * @param {Object} attrs attributes
+     * @param {Number} id id of the current handler
+     * @param {Boolean|Undefined} value value of the disabled property
+     */
+    function setDisabled(attrs, id, value) {
+      if (!value && unregisterPromise(attrs, id).length) {
+        return;
+      }
+
+      attrs.$set(DISABLED, value, true);
     }
 
     /**
@@ -48,39 +89,52 @@
      *
      * @param {Promise} promise promise
      * @param {Object} attrs attributes
+     * @param {Number} promiseId promise to handle
      */
-    function handleDisabled(promise, attrs) {
-      setDisabled(attrs, true);
+    function handlePromise(promise, attrs, promiseId) {
+      setDisabled(attrs, promiseId, true);
 
       // Wrap the promise and on each return case
       // since finally is reserved word we must use string notation to call the function
       promise['finally'](function() {
-        setDisabled(attrs);
+        setDisabled(attrs, promiseId);
       });
+    }
+
+    /**
+     * Trigger the defined handler.
+     *
+     * @param {Object} scope scope of the element
+     * @param {Object} attrs attributes
+     * @param {Function} fn function to trigger
+     */
+    function triggerHandler(scope, attrs, fn) {
+      var result = fn(scope, { $event : EVENT });
+
+      // If the autodisable "keyword" is set and the result is a promise
+      // then lets handle the disabled style
+      if (hasAutodisable(attrs) && isPromise(result)) {
+        handlePromise(result, attrs, registerPromise(attrs));
+      }
     }
 
     /**
      * The link function for this directive.
      * Contains a prepended function that represents the ngClick handler.
      *
-     * @param {Function} fn click handler
+     * @param {Array} handlers array of click handler
      * @param {Object} scope scope
      * @param {Angular Element} element directive element
      * @param {Object} attrs attributes
      */
-    function linkFn(fn, scope, element, attrs) {
+    function linkFn(handlers, scope, element, attrs) {
 
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
       element.unbind(EVENT).bind(EVENT, function() {
+        // Make sure we run the $digest cycle
         scope.$apply(function() {
-          var result = fn(scope, { $event : EVENT });
-
-          // If the autodisable "keyword" is set and the result is a promise
-          // then lets handle the disabled style
-          if (hasAutodisable(attrs) && isPromise(result)) {
-            handleDisabled(result, attrs);
-          }
+          handlers.forEach(triggerHandler.bind(null, scope, attrs));
         });
       });
     }
@@ -89,7 +143,8 @@
       restrict : 'A',
       priority : 100,
       compile  : function(el, attr) {
-        return linkFn.bind(null, $parse(attr.ngClick));
+        var handlers = attr.ngClick.split(';').map($parse);
+        return linkFn.bind(null, handlers);
       }
     };
   }]);

@@ -30,6 +30,103 @@ describe('angular autodisable', function() {
       expect($rootScope.clickHandler.callCount).toBe(1);
     });
 
+    it('should trigger $scope.$apply when calling the handler', function() {
+      $rootScope.clickHandler = function() {
+        $rootScope.data = 'hello';
+      };
+      var el = compile('<div><a ng-click="clickHandler()" ng-autodisable></a><span>{{ data }}</span></div>');
+      el.find('a').click();
+      expect(el.find('span').text()).toEqual('hello');
+    });
+
+    describe('multiple handlers', function() {
+      it('should trigger both handlers', function() {
+        $rootScope.firstHandler  = jasmine.createSpy();
+        $rootScope.secondHandler = jasmine.createSpy();
+        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        el.click();
+        expect($rootScope.firstHandler).toHaveBeenCalled();
+        expect($rootScope.secondHandler).toHaveBeenCalled();
+      });
+
+      it('should trigger $scope.$apply when calling the handler', function() {
+        $rootScope.firstHandler = function() {};
+        $rootScope.secondHandler = function() {
+          $rootScope.data = 'hello';
+        };
+        var el = compile('<div><a ng-click="firstHandler();secondHandler()" ng-autodisable></a><span>{{ data }}</span></div>');
+        el.find('a').click();
+        expect(el.find('span').text()).toEqual('hello');
+      });
+
+      it('should disable the button if atleast one ngClick handler returns $q promise', inject(function($q) {
+        $rootScope.defaultHandler = function() {};
+        $rootScope.promiseHandler = function() {
+          var defer = $q.defer();
+          return defer.promise;
+        };
+        var el = compile('<a ng-click="defaultHandler();promiseHandler()" ng-autodisable></a>');
+        el.click();
+        expect(el.attr('disabled')).toBeDefined();
+      }));
+
+      it('should not enable the button if the last promise resolves before others', inject(function($q) {
+        var defer1 = $q.defer();
+        var defer2 = $q.defer();
+        $rootScope.firstHandler = function() {
+          return defer1.promise;
+        };
+        $rootScope.secondHandler = function() {
+          return defer2.promise;
+        };
+        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        el.click();
+
+        defer2.resolve();
+        $rootScope.$apply();
+
+        expect(el.attr('disabled')).toBeDefined();
+      }));
+
+      it('should not enable the button if the last promise resolves before others', inject(function($q) {
+        var defer1 = $q.defer();
+        var defer2 = $q.defer();
+        $rootScope.firstHandler = function() {
+          return defer1.promise;
+        };
+        $rootScope.secondHandler = function() {
+          return defer2.promise;
+        };
+        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        el.click();
+
+        defer2.resolve();
+        $rootScope.$apply();
+
+        expect(el.attr('disabled')).toBeDefined();
+      }));
+
+      it('should enable the button if the all promises resolve', inject(function($q) {
+        var defer1 = $q.defer();
+        var defer2 = $q.defer();
+        $rootScope.firstHandler = function() {
+          return defer1.promise;
+        };
+        $rootScope.secondHandler = function() {
+          return defer2.promise;
+        };
+        var el = compile('<a ng-click="firstHandler();secondHandler()" ng-autodisable></a>');
+        el.click();
+
+        defer2.resolve();
+        $rootScope.$apply();
+
+        defer1.resolve();
+        $rootScope.$apply();
+        expect(el.attr('disabled')).not.toBeDefined();
+      }));
+    });
+
     describe('http promise', function() {
       it('should disable the button if ngClick returns HTTP promise', inject(function($http, $httpBackend) {
         $rootScope.clickHandler = function() {
@@ -110,4 +207,6 @@ describe('angular autodisable', function() {
       });
     });
   });
+
+
 });

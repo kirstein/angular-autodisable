@@ -1,4 +1,4 @@
-/* global describe,it,expect,inject */
+/* global describe,it,expect,inject,beforeEach */
 describe('ngClick', function() {
   'use strict';
   var element;
