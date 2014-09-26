@@ -23,16 +23,16 @@ describe('angular autodisable', function() {
       return el;
     }
 
-    it('should throw if no ng-click is defined', function() {
+    it('should throw if no ng-submit is defined', function() {
       expect(function() {
-        compile('<button ng-autodisable></button>');
+        compile('<form ng-autodisable> <button type="submit"></button> </form>');
       }).toThrow('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
     });
 
     it('should only call the handler once', function() {
       $rootScope.clickHandler = jasmine.createSpy();
-      var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-      el.click();
+      var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+      el.find('button[type=submit]').click();
       expect($rootScope.clickHandler.callCount).toBe(1);
     });
 
@@ -40,8 +40,8 @@ describe('angular autodisable', function() {
       $rootScope.clickHandler = function() {
         $rootScope.data = 'hello';
       };
-      var el = compile('<div><button ng-click="clickHandler()" ng-autodisable></button><span>{{ data }}</span></div>');
-      el.find('button').click();
+      var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <span>{{ data }}</span> <button type="submit"></button> </form>');
+      el.find('button[type=submit]').click();
       expect(el.find('span').text()).toEqual('hello');
     });
 
@@ -49,8 +49,8 @@ describe('angular autodisable', function() {
       it('should trigger both handlers', function() {
         $rootScope.firstHandler  = jasmine.createSpy();
         $rootScope.secondHandler = jasmine.createSpy();
-        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="firstHandler();secondHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
         expect($rootScope.firstHandler).toHaveBeenCalled();
         expect($rootScope.secondHandler).toHaveBeenCalled();
       });
@@ -60,20 +60,20 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           $rootScope.data = 'hello';
         };
-        var el = compile('<div><button ng-click="firstHandler();secondHandler()" ng-autodisable></button><span>{{ data }}</span></div>');
-        el.find('button').click();
+        var el = compile('<form ng-submit="firstHandler();secondHandler()" ng-autodisable> <span>{{ data }}</span> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
         expect(el.find('span').text()).toEqual('hello');
       });
 
-      it('should disable the button if atleast one ngClick handler returns $q promise', inject(function($q) {
+      it('should disable the button if at least one ngSubmit handler returns $q promise', inject(function($q) {
         $rootScope.defaultHandler = function() {};
         $rootScope.promiseHandler = function() {
           var defer = $q.defer();
           return defer.promise;
         };
-        var el = compile('<button ng-click="defaultHandler();promiseHandler()" ng-autodisable></button>');
-        el.click();
-        expect(el.attr('disabled')).toBeDefined();
+        var el = compile('<form ng-submit="defaultHandler();promiseHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
+        expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
       }));
 
       it('should not enable the button if the last promise resolves before others', inject(function($q) {
@@ -85,13 +85,13 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           return defer2.promise;
         };
-        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="firstHandler();secondHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
 
         defer2.resolve();
         $rootScope.$apply();
 
-        expect(el.attr('disabled')).toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
       }));
 
       it('should not enable the button if the last promise resolves before others', inject(function($q) {
@@ -103,13 +103,13 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           return defer2.promise;
         };
-        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="firstHandler();secondHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
 
         defer2.resolve();
         $rootScope.$apply();
 
-        expect(el.attr('disabled')).toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
       }));
 
       it('should enable the button if the all promises resolve', inject(function($q) {
@@ -121,15 +121,15 @@ describe('angular autodisable', function() {
         $rootScope.secondHandler = function() {
           return defer2.promise;
         };
-        var el = compile('<button ng-click="firstHandler();secondHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="firstHandler();secondHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
 
         defer2.resolve();
         $rootScope.$apply();
 
         defer1.resolve();
         $rootScope.$apply();
-        expect(el.attr('disabled')).not.toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).not.toBeDefined();
       }));
     });
 
@@ -139,9 +139,9 @@ describe('angular autodisable', function() {
           $httpBackend.expectGET('/').respond(200);
           return $http.get('/');
         };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
-        expect(el.attr('disabled')).toBeDefined();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
+        expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
         $httpBackend.flush();
       }));
 
@@ -150,10 +150,10 @@ describe('angular autodisable', function() {
           $httpBackend.expectGET('/').respond(200);
           return $http.get('/');
         };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
         $httpBackend.flush();
-        expect(el.attr('disabled')).not.toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).not.toBeDefined();
       }));
 
       it('should enable the button if ngClick returns HTTP promise resolves with an error', inject(function($http, $httpBackend) {
@@ -161,10 +161,10 @@ describe('angular autodisable', function() {
           $httpBackend.expectGET('/').respond(400);
           return $http.get('/');
         };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
         $httpBackend.flush();
-        expect(el.attr('disabled')).not.toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).not.toBeDefined();
       }));
     });
 
@@ -174,9 +174,9 @@ describe('angular autodisable', function() {
           var defer = $q.defer();
           return defer.promise;
         };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
-        expect(el.attr('disabled')).toBeDefined();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
+        expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
       }));
 
       it('should remove disabled after the promise is resolved with success', inject(function($q) {
@@ -184,11 +184,11 @@ describe('angular autodisable', function() {
         $rootScope.clickHandler = function() {
           return defer.promise;
         };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
         defer.resolve('resolved');
         $rootScope.$apply();
-        expect(el.attr('disabled')).not.toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).not.toBeDefined();
       }));
 
       it('should remove disabled after the promise is resolved with error', inject(function($q) {
@@ -196,18 +196,18 @@ describe('angular autodisable', function() {
         $rootScope.clickHandler = function() {
           return defer.promise;
         };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
         defer.reject('resolved');
         $rootScope.$apply();
-        expect(el.attr('disabled')).not.toBeDefined();
+        expect(el.find('button[type=submit]').attr('disabled')).not.toBeDefined();
       }));
 
       it('should not disable the button if it does not return button promise', function() {
         $rootScope.clickHandler = function() { return true; };
-        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
-        el.click();
-        expect(el.attr('disabled')).not.toBeDefined();
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
+        expect(el.find('button[type=submit]').attr('disabled')).not.toBeDefined();
       });
     });
   });
