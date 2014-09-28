@@ -11,9 +11,23 @@
    * @throws error if the `ngAutodisable` is on the element without the `ngClick` directive.
    */
   .directive('ngAutodisable', [ '$parse', function($parse) {
-    var EVENT    = 'click',         // Binding event
-        DISABLED = 'disabled',      // Disabled attribute
-        ATTRNAME = 'ngAutodisable'; // The attribute name to which we store the handlers ids
+    var types = {
+      click : {
+        EVENT : 'click',
+        attrName : 'ngClick',
+        disableFn : setDisabled
+      },
+      submit : {
+        EVENT : 'submit',
+        attrName : 'ngSubmit',
+        disableFn : setDisabledForm
+      }
+    };
+    var type = types.click;
+
+    var DISABLED = 'disabled',      // Disabled attribute
+        ATTRNAME = 'ngAutodisable', // The attribute name to which we store the handlers ids
+        ELEMENT = null;
 
     // Id for the registered handlers.
     // Will be incremented in order to make sure that handler is uniquely registered
@@ -77,6 +91,23 @@
     }
 
     /**
+     * Sets disabled property for the element.
+     * If the element contains more unfulfilled promises then it will not allow the element disabled set to false
+     *
+     * @param {Object} attrs attributes
+     * @param {Number} id id of the current handler
+     * @param {Boolean|Undefined} value value of the disabled property
+     */
+    function setDisabledForm(attrs, id, value) {
+        if (!value && unregisterPromise(attrs, id).length) {
+            return;
+        }
+
+        var element = angular.element(ELEMENT).find('button[type=submit]');
+        element.attr(DISABLED, !!value);
+    }
+
+    /**
      * Handle disabled style.
      * Will attach the disabled style from get-go and remove it after the promise is resolved.
      *
@@ -85,12 +116,12 @@
      * @param {Number} promiseId promise to handle
      */
     function handlePromise(promise, attrs, promiseId) {
-      setDisabled(attrs, promiseId, true);
+      type.disableFn(attrs, promiseId, true);
 
       // Wrap the promise and on each return case
       // since finally is reserved word we must use string notation to call the function
       promise['finally'](function() {
-        setDisabled(attrs, promiseId);
+        type.disableFn(attrs, promiseId);
       });
     }
 
@@ -102,7 +133,7 @@
      * @param {Function} fn function to trigger
      */
     function triggerHandler(scope, attrs, fn) {
-      var result = fn(scope, { $event : EVENT });
+      var result = fn(scope, { $event : type.EVENT });
 
       // If the function result happens to be a promise
       // then handle the `disabled` state of the element.
@@ -125,7 +156,7 @@
 
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
-      element.unbind(EVENT).bind(EVENT, function() {
+      element.unbind(type.EVENT).bind(type.EVENT, function() {
         // Make sure we run the $digest cycle
         scope.$apply(function() {
           handlers.forEach(triggerHandler.bind(null, scope, attrs));
@@ -136,11 +167,16 @@
     return {
       restrict : 'A',
       compile  : function(el, attrs) {
-        if (!attrs.hasOwnProperty('ngClick')) {
-          throw new Error('ngAutodisable requires ngClick attribute in order to work');
+        ELEMENT = el;
+        if( attrs.hasOwnProperty('ngClick') ) {
+            type = types.click;
+        } else  if ( attrs.hasOwnProperty('ngSubmit') ) {
+            type = types.submit;
+        } else {
+            throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
         }
 
-        var handlers = attrs.ngClick.split(';').map($parse);
+        var handlers = attrs[type.attrName].split(';').map($parse);;
         return linkFn.bind(null, handlers);
       }
     };
