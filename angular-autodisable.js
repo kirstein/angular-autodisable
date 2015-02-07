@@ -1,9 +1,3 @@
-/* 
- * angular-autodisable 0.0.1
- * http://github.com/kirstein/angular-autodisable
- * 
- * Licensed under the MIT license
- */
 (function (angular) {
   'use strict';
 
@@ -109,8 +103,15 @@
             return;
         }
 
-        var element = angular.element(ELEMENT).find('button[type=submit]');
-        element.attr(DISABLED, !!value);
+        var elements = angular.element(ELEMENT).find('button');
+		angular.forEach(elements, function (e) {
+			e = angular.element(e);
+			if (e.attr('type') && e.attr('type').toLowerCase() == 'submit')
+				if (value)
+					e.attr(DISABLED, true);
+				else
+					e.removeAttr(DISABLED);
+		});
     }
 
     /**
@@ -174,6 +175,7 @@
       restrict : 'A',
       compile  : function(el, attrs) {
         ELEMENT = el;
+		attrs.$set(ATTRNAME, null);
         if( attrs.hasOwnProperty('ngClick') ) {
             type = types.click;
         } else  if ( attrs.hasOwnProperty('ngSubmit') ) {
