@@ -33,7 +33,9 @@
 
     var DISABLED = 'disabled',      // Disabled attribute
         ATTRNAME = 'ngAutodisable', // The attribute name to which we store the handlers ids
-        ELEMENT = null;
+        ELEMENT = null,
+        LOADING_CLASS = false,
+        LOADING_CLASS_ATTR = 'ngAutodisableClass';
 
     // Id for the registered handlers.
     // Will be incremented in order to make sure that handler is uniquely registered
@@ -94,6 +96,7 @@
       }
 
       attrs.$set(DISABLED, value, true);
+      toggleLoadingClass(ELEMENT);
     }
 
     /**
@@ -111,6 +114,18 @@
 
         var element = angular.element(ELEMENT).find('button[type=submit]');
         element.attr(DISABLED, !!value);
+        toggleLoadingClass(element);
+    }
+
+    /**
+     * Toggles the loading class (if exist) to the element
+     *
+     * @param  {Element} element element to get the class attached to
+     */
+    function toggleLoadingClass(element) {
+      if(LOADING_CLASS) {
+        element.toggleClass(LOADING_CLASS);
+      }
     }
 
     /**
@@ -174,6 +189,9 @@
       restrict : 'A',
       compile  : function(el, attrs) {
         ELEMENT = el;
+        if ( attrs.hasOwnProperty(LOADING_CLASS_ATTR) ) {
+          LOADING_CLASS = attrs[LOADING_CLASS_ATTR];
+        }
         if( attrs.hasOwnProperty('ngClick') ) {
             type = types.click;
         } else  if ( attrs.hasOwnProperty('ngSubmit') ) {
@@ -182,7 +200,9 @@
             throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
         }
 
-        var handlers = attrs[type.attrName].split(';').map($parse);;
+        var handlers = attrs[type.attrName].split(';').map(function(callback) {
+            return $parse(callback, /* interceptorFn */ null, /* expensiveChecks */ true); 
+          });
         return linkFn.bind(null, handlers);
       }
     };
