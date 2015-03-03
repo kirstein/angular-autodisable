@@ -133,6 +133,29 @@ describe('angular autodisable', function() {
       }));
     });
 
+    describe('loading class', function() {
+      it('should add a class to the button if the promise is not resolved', inject(function($q) {
+        $rootScope.clickHandler = function() {
+          var defer = $q.defer();
+          return defer.promise;
+        };
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable-class="loading" ng-autodisable></button>');
+        el.click();
+        expect(el.hasClass('loading')).toBe(true);
+      }));
+
+      it('should add multiple class to the button if the promise is not resolved', inject(function($q) {
+        $rootScope.clickHandler = function() {
+          var defer = $q.defer();
+          return defer.promise;
+        };
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable-class="firstClass secondClass" ng-autodisable></button>');
+        el.click();
+        expect(el.hasClass('firstClass')).toBe(true);
+        expect(el.hasClass('secondClass')).toBe(true);
+      }));
+    });
+
     describe('http promise', function() {
       it('should disable the button if ngClick returns HTTP promise', inject(function($http, $httpBackend) {
         $rootScope.clickHandler = function() {

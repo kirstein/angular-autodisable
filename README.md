@@ -31,6 +31,14 @@ If thats done then just follow those simple steps:
 ```
   <button ng-click="doSomething()" ng-autodisable>Do something</button>
 ```
+#### Loading class
+
+You can optianlly add a list of classes which will be added to the element while this is disabled. This is usefull to add a spinner or something similar.
+
+```
+  <button ng-click="doSomething()" ng-autodisable-class="class1 class2" ng-autodisable>Do something</button>
+```
+
 
 ### Demo
 ---
