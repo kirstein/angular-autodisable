@@ -24,21 +24,47 @@ Include `ngAutodisable` as dependency
 
 If thats done then just follow those simple steps:  
 
-1. just attach `ng-autodisable` directive to the element which happens to have `ng-click` directive.
+1. just attach `ng-autodisable` directive to the element which happens to have `ng-click` directive OR a form that has the `ng-submit` directive.
 2. ???
 3. profit!
 
+#### On an element
+
 ```
   <button ng-click="doSomething()" ng-autodisable>Do something</button>
+  
+  <a ng-click="doSomething()" ng-autodisable>Do something</a>
 ```
+
+#### On a form
+
+```
+  <form ng-submit="doSomething()" ng-autodisable> 
+    ...
+    <button type="submit">Submit</button> 
+  </form>
+```
+The button with type `submit` within the form will be disabled.
+
 #### Loading class
 
-You can optianlly add a list of classes which will be added to the element while this is disabled. This is usefull to add a spinner or something similar.
+You can *optianlly* add a list of classes which will be added to the element while this is disabled. This is usefull to add a spinner or something similar.
 
 ```
-  <button ng-click="doSomething()" ng-autodisable-class="class1 class2" ng-autodisable>Do something</button>
+  <button ng-click="doSomething()" 
+          ng-autodisable-class="class1 class2" 
+          ng-autodisable>
+    Do something
+  </button>
+  
+  <form ng-submit="doSomething()" 
+        ng-autodisable-class="class1 class2"
+        ng-autodisable> 
+    ...
+    <button type="submit">Submit</button> 
+  </form>
 ```
-
+The button with type `submit` within the form will get the class.
 
 ### Demo
 ---
