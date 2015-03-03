@@ -176,7 +176,9 @@
             throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
         }
 
-        var handlers = attrs[type.attrName].split(';').map($parse);;
+        var handlers = attrs[type.attrName].split(';').map(function(callback) {
+            return $parse(callback, /* interceptorFn */ null, /* expensiveChecks */ true); 
+          });
         return linkFn.bind(null, handlers);
       }
     };
