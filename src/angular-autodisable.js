@@ -103,8 +103,15 @@
             return;
         }
 
-        var element = angular.element(ELEMENT).find('button[type=submit]');
-        element.attr(DISABLED, !!value);
+        var elements = angular.element(ELEMENT).find('button');
+		angular.forEach(elements, function (e) {
+			e = angular.element(e);
+			if (e.attr('type') && e.attr('type').toLowerCase() == 'submit')
+				if (value)
+					e.attr(DISABLED, true);
+				else
+					e.removeAttr(DISABLED);
+		});
     }
 
     /**
@@ -168,6 +175,7 @@
       restrict : 'A',
       compile  : function(el, attrs) {
         ELEMENT = el;
+		attrs.$set(ATTRNAME, null);
         if( attrs.hasOwnProperty('ngClick') ) {
             type = types.click;
         } else  if ( attrs.hasOwnProperty('ngSubmit') ) {
