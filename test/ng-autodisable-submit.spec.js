@@ -154,6 +154,19 @@ describe('angular autodisable', function() {
         expect(el.find('button[type=submit]').hasClass('firstClass')).toBe(true);
         expect(el.find('button[type=submit]').hasClass('secondClass')).toBe(true);
       }));
+
+      it('should remove the classes to the button if the promise is resolved', inject(function($q) {
+        var defer = $q.defer();
+        $rootScope.clickHandler = function() {
+          return defer.promise;
+        };
+        var el = compile('<form ng-submit="clickHandler()" ng-autodisable-class="firstClass secondClass" ng-autodisable> <button type="submit"></button> </form>');
+        el.find('button[type=submit]').click();
+        defer.resolve('resolved');
+        $rootScope.$apply();
+        expect(el.find('button[type=submit]').hasClass('firstClass')).toBe(false);
+        expect(el.find('button[type=submit]').hasClass('secondClass')).toBe(false);
+      }));
     });
 
     describe('http promise', function() {
