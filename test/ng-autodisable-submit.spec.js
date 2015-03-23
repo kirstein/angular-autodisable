@@ -36,6 +36,20 @@ describe('angular autodisable', function() {
       expect($rootScope.clickHandler.callCount).toBe(1);
     });
 
+    it('should handle more than one directive type', inject(function($q) {
+      var defer1 = $q.defer();
+        
+      $rootScope.firstHandler = function() {
+        return defer1.promise;
+      };
+      $rootScope.secondHandler = jasmine.createSpy();
+      var el = compile('<form ng-submit="firstHandler()" ng-autodisable> <button id="formButton" type="submit"></button> </form><button id="simpleButton" ng-click="secondHandler()" ng-autodisable></button');
+      el.find('#formButton').click();
+
+      expect(el.find('#formButton').attr('disabled')).toBeDefined();
+      expect(el.find('#simpleButton').attr('disabled')).not.toBeDefined();
+    }));
+
     it('should trigger $scope.$apply when calling the handler', function() {
       $rootScope.clickHandler = function() {
         $rootScope.data = 'hello';
