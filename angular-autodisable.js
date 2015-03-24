@@ -1,5 +1,5 @@
 /* 
- * angular-autodisable 0.0.1
+ * angular-autodisable 0.1.1
  * http://github.com/kirstein/angular-autodisable
  * 
  * Licensed under the MIT license
@@ -17,29 +17,14 @@
    * @throws error if the `ngAutodisable` is on the element without the `ngClick` directive.
    */
   .directive('ngAutodisable', [ '$parse', function($parse) {
-    var types = {
-      click : {
-        EVENT : 'click',
-        attrName : 'ngClick',
-        disableFn : setDisabled
-      },
-      submit : {
-        EVENT : 'submit',
-        attrName : 'ngSubmit',
-        disableFn : setDisabledForm
-      }
-    };
-    var type = types.click;
 
     var DISABLED = 'disabled',      // Disabled attribute
         ATTRNAME = 'ngAutodisable', // The attribute name to which we store the handlers ids
-        ELEMENT = null,
-        LOADING_CLASS = false,
+        CLICK_EVENT = 'click',
+        CLICK_ATTR = 'ngClick',
+        SUBMIT_EVENT = 'submit',
+        SUBMIT_ATTR = 'ngSubmit',
         LOADING_CLASS_ATTR = 'ngAutodisableClass';
-
-    // Id for the registered handlers.
-    // Will be incremented in order to make sure that handler is uniquely registered
-    var handlerId = 0;
 
     /**
      * Validates if the given promise is really a promise that we can use.
@@ -55,112 +40,20 @@
     }
 
     /**
-     * Unregisters promise from the attributes list.
-     *
-     * @param {Object} attrs attributes
-     * @param {Number} id id of the current promise to unregister
-     * @return {Array} array of remaining ids
-     */
-    function unregisterPromise(attrs, id) {
-      var ids = attrs[ATTRNAME];
-      ids.splice(ids.indexOf(id), 1);
-      attrs.$set(ATTRNAME, ids);
-      return ids;
-    }
-
-    /**
-     * Register the promise to the attributes list.
-     * Grant its the unique ID
-     *
-     * @param {Object} attrs attributes
-     * @return {Number} registered attribute id
-     */
-    function registerPromise(attrs) {
-      var id = handlerId++;
-      attrs.$set(ATTRNAME, (attrs[ATTRNAME] || []).concat(id));
-      return id;
-    }
-
-
-    /**
-     * Sets disabled property for the element.
-     * If the element contains more unfulfilled promises then it will not allow the element disabled set to false
-     *
-     * @param {Object} attrs attributes
-     * @param {Number} id id of the current handler
-     * @param {Boolean|Undefined} value value of the disabled property
-     */
-    function setDisabled(attrs, id, value) {
-      if (!value && unregisterPromise(attrs, id).length) {
-        return;
-      }
-
-      attrs.$set(DISABLED, value, true);
-      toggleLoadingClass(ELEMENT);
-    }
-
-    /**
-     * Sets disabled property for the element.
-     * If the element contains more unfulfilled promises then it will not allow the element disabled set to false
-     *
-     * @param {Object} attrs attributes
-     * @param {Number} id id of the current handler
-     * @param {Boolean|Undefined} value value of the disabled property
-     */
-    function setDisabledForm(attrs, id, value) {
-        if (!value && unregisterPromise(attrs, id).length) {
-            return;
-        }
-
-        var element = angular.element(ELEMENT).find('button[type=submit]');
-        element.attr(DISABLED, !!value);
-        toggleLoadingClass(element);
-    }
-
-    /**
-     * Toggles the loading class (if exist) to the element
-     *
-     * @param  {Element} element element to get the class attached to
-     */
-    function toggleLoadingClass(element) {
-      if(LOADING_CLASS) {
-        element.toggleClass(LOADING_CLASS);
-      }
-    }
-
-    /**
-     * Handle disabled style.
-     * Will attach the disabled style from get-go and remove it after the promise is resolved.
-     *
-     * @param {Promise} promise promise
-     * @param {Object} attrs attributes
-     * @param {Number} promiseId promise to handle
-     */
-    function handlePromise(promise, attrs, promiseId) {
-      type.disableFn(attrs, promiseId, true);
-
-      // Wrap the promise and on each return case
-      // since finally is reserved word we must use string notation to call the function
-      promise['finally'](function() {
-        type.disableFn(attrs, promiseId);
-      });
-    }
-
-    /**
      * Trigger the defined handler.
      *
      * @param {Object} scope scope of the element
      * @param {Object} attrs attributes
      * @param {Function} fn function to trigger
      */
-    function triggerHandler(scope, attrs, fn) {
-      var result = fn(scope, { $event : type.EVENT });
+    function triggerHandler(handler, scope, fn) {
+      var result = fn(scope, { $event : handler.eventName });
 
       // If the function result happens to be a promise
       // then handle the `disabled` state of the element.
       // registers the result handler as an attribute
       if (isPromise(result)) {
-        handlePromise(result, attrs, registerPromise(attrs));
+        handler.handlePromise(result);
       }
     }
 
@@ -173,37 +66,123 @@
      * @param {Angular Element} element directive element
      * @param {Object} attrs attributes
      */
-    function linkFn(handlers, scope, element, attrs) {
+    function linkFn(handler, scope, element, attrs) {
 
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
-      element.unbind(type.EVENT).bind(type.EVENT, function() {
+      element.unbind(handler.eventName).bind(handler.eventName, function() {
         // Make sure we run the $digest cycle
         scope.$apply(function() {
-          handlers.forEach(triggerHandler.bind(null, scope, attrs));
+          handler.callbacks.forEach(triggerHandler.bind(null, handler, scope));
         });
       });
     }
 
+    function getCallbacks(expression) {
+      return expression.split(';').map(function(callback) {
+            return $parse(callback, /* interceptorFn */ null, /* expensiveChecks */ true);
+          });
+    }
+
+    function getLoadingClass(attrs) {
+      return attrs.hasOwnProperty(LOADING_CLASS_ATTR) ? attrs[LOADING_CLASS_ATTR] : false;
+    }
+
+
+    /**
+     * Returns a new instance that can handle the promises returned by the callbacks.
+     * It will disable the given element when the first promise is triggered. And will
+     * re-enable the element, when the last promise is finished.
+     *
+     * @param  {Element} elementToDisable     DOM element that should be enabled and disabled.
+     * @param  {String} eventName             Name of the event ('click' or 'submit')
+     * @param  {String|Boolean} loadingClass  Class(es) to toggle to the element or false not disired.
+     * @param  {Array} callbacks              Array of callback functions to trigger.
+     * @return {Object}                       Object that handles the promises.
+     */
+    function handlerInstance(elementToDisable, eventName, loadingClass, callbacks) {
+      var instance = {},
+          promisesTriggered = 0;
+
+      instance.eventName = eventName;
+      instance.callbacks = callbacks;
+
+      /**
+       * This should be called everytime a callback returns a promise.
+       *
+       * Disables the element for the first promise. And re-enables it when
+       * the last promise is done.
+       *
+       * @param  {Promise} promise promise returned by a callback.
+       */
+      instance.handlePromise = function(promise) {
+        if (promisesTriggered === 0) {
+          disableElement();
+        }
+        promisesTriggered++;
+
+        promise['finally'](function() {
+          promiseDone();
+        });
+      };
+
+      /**
+       * This is called every time a promise is done.
+       *
+       * Re-enables the element when the last promise is done.
+       */
+      function promiseDone() {
+        promisesTriggered--;
+        if (promisesTriggered === 0) {
+          enableElement();
+        }
+      }
+
+      /**
+       * Disables the element. It can also add the classes listed by
+       * loadingClass.
+       */
+      function disableElement() {
+        elementToDisable.attr(DISABLED, true);
+        if (loadingClass) {
+          elementToDisable.addClass(loadingClass);
+        }
+      }
+
+      /**
+       * Enables the element. It can also remove the classes listed by
+       * loadingClass.
+       */
+      function enableElement() {
+        elementToDisable.attr(DISABLED, false);
+        if (loadingClass) {
+          elementToDisable.removeClass(loadingClass);
+        }
+      }
+
+      return instance;
+    }
+
     return {
       restrict : 'A',
-      compile  : function(el, attrs) {
-        ELEMENT = el;
-        if ( attrs.hasOwnProperty(LOADING_CLASS_ATTR) ) {
-          LOADING_CLASS = attrs[LOADING_CLASS_ATTR];
-        }
-        if( attrs.hasOwnProperty('ngClick') ) {
-            type = types.click;
-        } else  if ( attrs.hasOwnProperty('ngSubmit') ) {
-            type = types.submit;
+      compile  : function(element, attrs) {
+        var handler;
+
+        if( attrs.hasOwnProperty(CLICK_ATTR) ) {
+            handler = handlerInstance(element,
+                                      CLICK_EVENT,
+                                      getLoadingClass(attrs),
+                                      getCallbacks(attrs[CLICK_ATTR]));
+        } else  if ( attrs.hasOwnProperty(SUBMIT_ATTR) ) {
+            handler = handlerInstance(element.find('button[type=submit]'),
+                                      SUBMIT_EVENT,
+                                      getLoadingClass(attrs),
+                                      getCallbacks(attrs[SUBMIT_ATTR]));
         } else {
             throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
         }
 
-        var handlers = attrs[type.attrName].split(';').map(function(callback) {
-            return $parse(callback, /* interceptorFn */ null, /* expensiveChecks */ true); 
-          });
-        return linkFn.bind(null, handlers);
+        return linkFn.bind(null, handler);
       }
     };
   }]);
