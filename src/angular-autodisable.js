@@ -87,7 +87,7 @@
      * Returns a new instance that can handle the promises returned by the callbacks.
      * It will disable the given element when the first promise is triggered. And will
      * re-enable the element, when the last promise is finished.
-     * 
+     *
      * @param  {Element} elementToDisable     DOM element that should be enabled and disabled.
      * @param  {String} eventName             Name of the event ('click' or 'submit')
      * @param  {String|Boolean} loadingClass  Class(es) to toggle to the element or false not disired.
@@ -103,10 +103,10 @@
 
       /**
        * This should be called everytime a callback returns a promise.
-       * 
+       *
        * Disables the element for the first promise. And re-enables it when
        * the last promise is done.
-       * 
+       *
        * @param  {Promise} promise promise returned by a callback.
        */
       instance.handlePromise = function(promise) {
@@ -118,7 +118,7 @@
         promise['finally'](function() {
           promiseDone();
         });
-      }
+      };
 
       /**
        * This is called every time a promise is done.
@@ -145,13 +145,13 @@
 
       /**
        * Enables the element. It can also remove the classes listed by
-       * loadingClass. 
+       * loadingClass.
        */
       function enableElement() {
-       elementToDisable.attr(DISABLED, false);
+        elementToDisable.attr(DISABLED, false);
         if (loadingClass) {
           elementToDisable.removeClass(loadingClass);
-        } 
+        }
       }
 
       return instance;
@@ -164,8 +164,8 @@
 
         if( attrs.hasOwnProperty(CLICK_ATTR) ) {
             handler = handlerInstance(element,
-                                      CLICK_EVENT, 
-                                      getLoadingClass(attrs), 
+                                      CLICK_EVENT,
+                                      getLoadingClass(attrs),
                                       getCallbacks(attrs[CLICK_ATTR]));
         } else  if ( attrs.hasOwnProperty(SUBMIT_ATTR) ) {
             handler = handlerInstance(element.find('button[type=submit]'),
