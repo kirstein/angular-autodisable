@@ -90,6 +90,18 @@ describe('angular autodisable', function() {
         expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
       }));
 
+      it('should disable the button when the form is inside ng-if', inject(function($q) {
+        $rootScope.promiseHandler = function() {
+          var defer = $q.defer();
+          return defer.promise;
+        };
+        var el = compile('<div ng-if="true"><form ng-submit="promiseHandler()" ng-autodisable> <button type="submit"></button> </form></div>');
+        el.find('button[type=submit]').click();
+        expect(el.find('button[type=submit]').attr('disabled')).toBeDefined();
+      }));
+
+      
+
       it('should not enable the button if the last promise resolves before others', inject(function($q) {
         var defer1 = $q.defer();
         var defer2 = $q.defer();
