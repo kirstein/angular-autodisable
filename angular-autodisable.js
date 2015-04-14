@@ -1,5 +1,5 @@
 /* 
- * angular-autodisable 0.1.1
+ * angular-autodisable 0.2.0
  * http://github.com/kirstein/angular-autodisable
  * 
  * Licensed under the MIT license
@@ -16,7 +16,7 @@
    *
    * @throws error if the `ngAutodisable` is on the element without the `ngClick` directive.
    */
-  .directive('ngAutodisable', [ '$parse', function($parse) {
+  .directive('ngAutodisable', [ '$parse', '$compile', function($parse, $compile) {
 
     var DISABLED = 'disabled',      // Disabled attribute
         ATTRNAME = 'ngAutodisable', // The attribute name to which we store the handlers ids
@@ -73,6 +73,7 @@
       element.unbind(handler.eventName).bind(handler.eventName, function() {
         // Make sure we run the $digest cycle
         scope.$apply(function() {
+          $compile(element)(scope);
           handler.callbacks.forEach(triggerHandler.bind(null, handler, scope));
         });
       });
