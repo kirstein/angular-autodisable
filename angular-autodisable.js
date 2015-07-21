@@ -1,5 +1,5 @@
 /* 
- * angular-autodisable 0.1.1
+ * angular-autodisable 0.2.0
  * http://github.com/kirstein/angular-autodisable
  * 
  * Licensed under the MIT license
@@ -66,8 +66,23 @@
      * @param {Angular Element} element directive element
      * @param {Object} attrs attributes
      */
-    function linkFn(handler, scope, element, attrs) {
+    function linkFn(scope, element, attrs) {
+      var handler;
 
+      if (attrs.hasOwnProperty(CLICK_ATTR)) {
+          handler = handlerInstance(element,
+              CLICK_EVENT,
+              getLoadingClass(attrs),
+              getCallbacks(attrs[CLICK_ATTR]));
+      } else if (attrs.hasOwnProperty(SUBMIT_ATTR)) {
+          handler = handlerInstance(element.find('button[type=submit]'),
+              SUBMIT_EVENT,
+              getLoadingClass(attrs),
+              getCallbacks(attrs[SUBMIT_ATTR]));
+      } else {
+          throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
+      }
+        
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
       element.unbind(handler.eventName).bind(handler.eventName, function() {
@@ -165,25 +180,7 @@
 
     return {
       restrict : 'A',
-      compile  : function(element, attrs) {
-        var handler;
-
-        if( attrs.hasOwnProperty(CLICK_ATTR) ) {
-            handler = handlerInstance(element,
-                                      CLICK_EVENT,
-                                      getLoadingClass(attrs),
-                                      getCallbacks(attrs[CLICK_ATTR]));
-        } else  if ( attrs.hasOwnProperty(SUBMIT_ATTR) ) {
-            handler = handlerInstance(element.find('button[type=submit]'),
-                                      SUBMIT_EVENT,
-                                      getLoadingClass(attrs),
-                                      getCallbacks(attrs[SUBMIT_ATTR]));
-        } else {
-            throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
-        }
-
-        return linkFn.bind(null, handler);
-      }
+      link  : linkFn
     };
   }]);
 
