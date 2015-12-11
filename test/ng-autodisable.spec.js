@@ -65,7 +65,7 @@ describe('angular autodisable', function() {
         expect(el.find('span').text()).toEqual('hello');
       });
 
-      it('should disable the button if atleast one ngClick handler returns $q promise', inject(function($q) {
+      it('should disable the button if at least one ngClick handler returns $q promise', inject(function($q) {
         $rootScope.defaultHandler = function() {};
         $rootScope.promiseHandler = function() {
           var defer = $q.defer();
@@ -122,7 +122,7 @@ describe('angular autodisable', function() {
         expect(el.attr('disabled')).toBeDefined();
       }));
 
-      it('should enable the button if the all promises resolve', inject(function($q) {
+      it('should enable the button if all promises resolve', inject(function($q) {
         var defer1 = $q.defer();
         var defer2 = $q.defer();
         $rootScope.firstHandler = function() {

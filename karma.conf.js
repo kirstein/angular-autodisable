@@ -7,7 +7,7 @@ module.exports = function (config) {
       'components/angular/angular.js',
       'components/angular-mocks/angular-mocks.js',
 
-      // The phantomJs does not support bind. Hence we inclde a shim
+      // The phantomJs does not support bind. Hence we include a shim
       'components/es5-shim/es5-shim.js',
 
       // The library itself

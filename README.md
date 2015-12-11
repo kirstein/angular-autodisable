@@ -22,7 +22,7 @@ Include `ngAutodisable` as dependency
   angular.module('MyApp', [ 'ngAutodisable', ... ]);
 ``` 
 
-If thats done then just follow those simple steps:  
+If that's done then just follow those simple steps:  
 
 1. just attach `ng-autodisable` directive to the element which happens to have `ng-click` directive OR a form that has the `ng-submit` directive.
 2. ???
@@ -48,7 +48,7 @@ The button with type `submit` within the form will be disabled.
 
 #### Loading class
 
-You can *optianlly* add a list of classes which will be added to the element while this is disabled. This is usefull to add a spinner or something similar.
+You can *optionally* add a list of classes which will be added to the element while this is disabled. This is useful to add a spinner or something similar.
 
 ```
   <button ng-click="doSomething()" 
@@ -76,7 +76,7 @@ A quick demo is available at [jsfiddle](http://jsfiddle.net/kirstein/wXnks/embed
 
 When `ngClick` and `ngAutodisable` are on the same element then `ngAutodisable` overwrites the handler for `click` event. The default `ngClick` action is recreated _(and passes all the angular specs)_.  
 
-If the click handlers result happens to be a `promise` _(`$http` or `$q`)_ then the element attribute `disabled` will be set as true. If the promise fulfils then the element `disabled` attribute will be removed.
+If the click handlers result happens to be a `promise` _(`$http` or `$q`)_ then the element attribute `disabled` will be set as true. If the promise fulfills then the element `disabled` attribute will be removed.
 
 This also works with multiple click handlers, given that click handlers are separated by `;` as such:  
 
