@@ -111,7 +111,7 @@
      *
      * @param  {Element} elementToDisable     DOM element that should be enabled and disabled.
      * @param  {String} eventName             Name of the event ('click' or 'submit')
-     * @param  {String|Boolean} loadingClass  Class(es) to toggle to the element or false not disired.
+     * @param  {String|Boolean} loadingClass  Class(es) to toggle to the element or false not desired.
      * @param  {Array} callbacks              Array of callback functions to trigger.
      * @return {Object}                       Object that handles the promises.
      */
