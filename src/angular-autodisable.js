@@ -37,11 +37,11 @@
      * Trigger the defined handler.
      *
      * @param {Object} scope scope of the element
-     * @param {Object} attrs attributes
+     * @param {Object} event the event
      * @param {Function} fn function to trigger
      */
-    function triggerHandler(handler, scope, fn) {
-      var result = fn(scope, { $event : handler.eventName });
+    function triggerHandler(handler, scope, event, fn) {
+      var result = fn(scope, { $event : event });
 
       // If the function result happens to be a promise
       // then handle the `disabled` state of the element.
@@ -79,10 +79,10 @@
         
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
-      element.unbind(handler.eventName).bind(handler.eventName, function() {
+      element.unbind(handler.eventName).bind(handler.eventName, function(event) {
         // Make sure we run the $digest cycle
         scope.$apply(function() {
-          handler.callbacks.forEach(triggerHandler.bind(null, handler, scope));
+          handler.callbacks.forEach(triggerHandler.bind(null, handler, scope, event));
         });
       });
     }
