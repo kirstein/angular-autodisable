@@ -10,6 +10,9 @@ module.exports = function (config) {
       // The phantomJs does not support bind. Hence we include a shim
       'components/es5-shim/es5-shim.js',
 
+      // ES6 Promise
+      'components/es6-promise/promise.js',
+
       // The library itself
       'src/*.js',
 

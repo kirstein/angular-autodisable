@@ -22,15 +22,13 @@
 
     /**
      * Validates if the given promise is really a promise that we can use.
-     * Out promises must have at least `then` and `finally` functions
+     * Out promises must have at least `then` function
      *
      * @param {Object} promise promise to test
      * @return {Boolean} true if its a promise, otherwise false
      */
     function isPromise(promise) {
-      return promise                          &&
-             angular.isFunction(promise.then) &&
-             angular.isFunction(promise['finally']);
+      return promise && angular.isFunction(promise.then);
     }
 
     /**
@@ -130,9 +128,8 @@
         }
         promisesTriggered++;
 
-        promise['finally'](function() {
-          promiseDone();
-        });
+        promise
+          .then(promiseDone, promiseDone);
       };
 
       /**
