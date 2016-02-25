@@ -5,6 +5,7 @@
  before_install:
    - npm install -g grunt-cli
    - npm install -g bower
+   - bower install
 
  script:
    - grunt test --browsers Firefox --reporters=dots
