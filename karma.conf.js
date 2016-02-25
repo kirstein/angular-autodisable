@@ -3,7 +3,7 @@ module.exports = function (config) {
   config.set({
     frameworks : [ 'jasmine' ],
     files : [
-      'components/jquery/jquery.js',
+      'components/jquery/dist/jquery.js',
       'components/angular/angular.js',
       'components/angular-mocks/angular-mocks.js',
 

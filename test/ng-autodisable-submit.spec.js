@@ -26,14 +26,14 @@ describe('angular autodisable', function() {
     it('should throw if no ng-submit is defined', function() {
       expect(function() {
         compile('<form ng-autodisable> <button type="submit"></button> </form>');
-      }).toThrow('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
+      }).toThrowError('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
     });
 
     it('should only call the handler once', function() {
       $rootScope.clickHandler = jasmine.createSpy();
       var el = compile('<form ng-submit="clickHandler()" ng-autodisable> <button type="submit"></button> </form>');
       el.find('button[type=submit]').click();
-      expect($rootScope.clickHandler.callCount).toBe(1);
+      expect($rootScope.clickHandler.calls.count()).toBe(1);
     });
 
     it('should handle more than one directive type', inject(function($q) {
