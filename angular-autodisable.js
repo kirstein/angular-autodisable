@@ -1,5 +1,5 @@
 /* 
- * angular-autodisable 0.2.1
+ * angular-autodisable 0.2.2
  * http://github.com/kirstein/angular-autodisable
  * 
  * Licensed under the MIT license
@@ -75,14 +75,14 @@
               getLoadingClass(attrs),
               getCallbacks(attrs[CLICK_ATTR]));
       } else if (attrs.hasOwnProperty(SUBMIT_ATTR)) {
-          handler = handlerInstance(element.find('button[type=submit]'),
+          handler = handlerInstance($("button[type=submit]", element),
               SUBMIT_EVENT,
               getLoadingClass(attrs),
               getCallbacks(attrs[SUBMIT_ATTR]));
       } else {
           throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
       }
-        
+
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
       element.unbind(handler.eventName).bind(handler.eventName, function(event) {
