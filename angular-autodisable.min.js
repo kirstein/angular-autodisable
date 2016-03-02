@@ -1,5 +1,5 @@
 /* 
- * angular-autodisable 0.2.2
+ * angular-autodisable 0.2.3
  * http://github.com/kirstein/angular-autodisable
  * 
  * Licensed under the MIT license
