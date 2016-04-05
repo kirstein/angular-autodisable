@@ -3,11 +3,9 @@
   "version": "0.2.2",
   "description": "Angular directive that extends ngClick behaviour allowing it to automatically disable target element if the handler returns a promise",
   "homepage": "http://github.com/kirstein/angular-autodisable",
+  "main": "angular-autodisable.js",
   "directories": {
     "test": "test"
-  },
-  "scripts": {
-    "postinstall": "bower install"
   },
   "repository": {
     "type": "git",
@@ -15,6 +13,9 @@
   },
   "author": "Mikk Kirstein",
   "license": "MIT",
+  "scripts": {
+    "build": "grunt build"
+  },
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-banner": "~0.1.4",
@@ -24,7 +25,12 @@
     "karma": "^0.12.23",
     "karma-growl-reporter": "~0.1.1",
     "karma-jasmine": "~0.1.3",
-    "karma-phantomjs-launcher": "^0.1.4"
+    "karma-phantomjs-launcher": "^0.1.4",
+    "angular-mocks": "~1.2.0",
+    "jquery": "~2.1.1",
+    "es5-shim": "~4.5.7"
   },
-  "dependencies": {}
+  "dependencies": {
+    "angular": ">1.2.0"
+  }
 }
