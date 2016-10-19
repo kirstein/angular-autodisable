@@ -1,6 +1,6 @@
 {
   "name": "angular-autodisable",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description" : "Angular directive that extends ngClick behaviour allowing it to automatically disable target element if the handler returns a promise",
   "keywords" : [ "angular", "ngClick", "button", "disable", "automatic", "directive" ],
   "main": "angular-autodisable.js",
