@@ -2,6 +2,8 @@
 describe('angular autodisable', function() {
   'use strict';
 
+  var Promise = window.Promise || ES6Promise.Promise;
+
   it('should pass', function() {
     expect(true).toBe(true);
     expect(false).toBe(!true);
@@ -26,14 +28,14 @@ describe('angular autodisable', function() {
     it('should throw if no ng-click is defined', function() {
       expect(function() {
         compile('<button ng-autodisable></button>');
-      }).toThrow('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
+      }).toThrowError('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
     });
 
     it('should only call the handler once', function() {
       $rootScope.clickHandler = jasmine.createSpy();
       var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
       el.click();
-      expect($rootScope.clickHandler.callCount).toBe(1);
+      expect($rootScope.clickHandler.calls.count()).toBe(1);
     });
 
     it('should trigger $scope.$apply when calling the handler', function() {
@@ -254,6 +256,53 @@ describe('angular autodisable', function() {
         var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
         el.click();
         expect(el.attr('disabled')).not.toBeDefined();
+      });
+    });
+
+    describe('ES6 promise', function() {
+      it('should disable the button if ngClick returns ES6 promise', inject(function($q) {
+        $rootScope.clickHandler = function() {
+          return new Promise(function (resolve, reject) {});
+        };
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
+        el.click();
+        expect(el.attr('disabled')).toBeDefined();
+      }));
+
+      it('should remove disabled after the promise is resolved with success', function(done) {
+        var resolve;
+        $rootScope.clickHandler = function() {
+          return new Promise(function (_resolve, reject) {
+            resolve = _resolve
+          });
+        };
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
+        el.click();
+        resolve('resolved');
+        $rootScope.$apply();
+        // ES6 promise is async and will be resolved at next tick
+        setTimeout(function () {
+          expect(el.attr('disabled')).not.toBeDefined();
+          done();
+        }, 0)
+      });
+
+      it('should remove disabled after the promise is resolved with error', function(done) {
+        var reject;
+        $rootScope.clickHandler = function() {
+          return new Promise(function (resolve, _reject) {
+            reject = _reject
+          });
+        };
+        var el = compile('<button ng-click="clickHandler()" ng-autodisable></button>');
+        el.click();
+        reject('rejected');
+        $rootScope.$apply();
+        // ES6 promise is async and will be resolved at next tick
+        setTimeout(function () {
+          expect(el.attr('disabled')).not.toBeDefined();
+          done();
+        }, 0)
       });
     });
   });

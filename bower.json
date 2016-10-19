@@ -9,11 +9,12 @@
     "components"
   ],
   "dependencies": {
-    "angular": ">1.2.0"
+    "angular": ">1.2.0",
+    "es6-promise": "~3.1.2"
   },
   "devDependencies": {
     "angular-mocks": ">1.2.0",
-    "jquery": "~2.0.0",
-    "es5-shim": "~2.1.0"
+    "jquery": "~2.2.1",
+    "es5-shim": "~4.5.5"
   }
 }
