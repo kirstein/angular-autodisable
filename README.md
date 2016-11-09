@@ -41,10 +41,12 @@ If that's done then just follow those simple steps:
 ```
   <form ng-submit="doSomething()" ng-autodisable> 
     ...
-    <button type="submit">Submit</button> 
+    <button type="submit">Submit 1</button> 
+    ...
+    <button type="submit">Submit 2</button> 
   </form>
 ```
-The button with type `submit` within the form will be disabled.
+All buttons with type `submit` within the form will be disabled.
 
 #### Loading class
 

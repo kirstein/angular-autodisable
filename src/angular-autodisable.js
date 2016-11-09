@@ -10,7 +10,7 @@
    *
    * @throws error if the `ngAutodisable` is on the element without the `ngClick` directive.
    */
-  .directive('ngAutodisable', [ '$parse', function($parse) {
+  .directive('ngAutodisable', [ '$parse', '$document', function($parse, $document) {
 
     var DISABLED = 'disabled',      // Disabled attribute
         ATTRNAME = 'ngAutodisable', // The attribute name to which we store the handlers ids
@@ -59,29 +59,39 @@
      * @param {Object} attrs attributes
      */
     function linkFn(scope, element, attrs) {
-      var handler;
+      var handlers = [];
 
       if (attrs.hasOwnProperty(CLICK_ATTR)) {
-          handler = handlerInstance(element,
+          handlers.push(handlerInstance(element,
               CLICK_EVENT,
               getLoadingClass(attrs),
-              getCallbacks(attrs[CLICK_ATTR]));
+              getCallbacks(attrs[CLICK_ATTR])));
       } else if (attrs.hasOwnProperty(SUBMIT_ATTR)) {
-          handler = handlerInstance($("button[type=submit]", element),
-              SUBMIT_EVENT,
-              getLoadingClass(attrs),
-              getCallbacks(attrs[SUBMIT_ATTR]));
+          var buttons = $document.find('button');
+          if (buttons.length === 0) {
+            throw new Error('ngAutodisable on a from requires buttons with \'type="submit"\'');
+          }
+          angular.forEach(buttons, function (button) {
+              if (button.type === SUBMIT_EVENT) {
+                  handlers.push(handlerInstance(angular.element(button),
+                      SUBMIT_EVENT,
+                      getLoadingClass(attrs),
+                      getCallbacks(attrs[SUBMIT_ATTR])));
+              }
+          });
       } else {
           throw new Error('ngAutodisable requires ngClick or ngSubmit attribute in order to work');
       }
 
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
-      element.unbind(handler.eventName).bind(handler.eventName, function(event) {
-        // Make sure we run the $digest cycle
-        scope.$apply(function() {
-          handler.callbacks.forEach(triggerHandler.bind(null, handler, scope, event));
-        });
+      angular.forEach(handlers, function (handler) {
+          element.unbind(handler.eventName).bind(handler.eventName, function (event) {
+              // Make sure we run the $digest cycle
+              scope.$apply(function () {
+                  handler.callbacks.forEach(triggerHandler.bind(null, handler, scope, event));
+              });
+          });
       });
     }
 
