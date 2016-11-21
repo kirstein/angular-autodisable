@@ -10,7 +10,7 @@
    *
    * @throws error if the `ngAutodisable` is on the element without the `ngClick` directive.
    */
-  .directive('ngAutodisable', [ '$parse', '$document', function($parse, $document) {
+  .directive('ngAutodisable', [ '$parse', function($parse) {
 
     var DISABLED = 'disabled',      // Disabled attribute
         ATTRNAME = 'ngAutodisable', // The attribute name to which we store the handlers ids
@@ -60,14 +60,17 @@
      */
     function linkFn(scope, element, attrs) {
       var handlers = [];
+      var eventName;
 
       if (attrs.hasOwnProperty(CLICK_ATTR)) {
+          eventName = CLICK_EVENT;
           handlers.push(handlerInstance(element,
               CLICK_EVENT,
               getLoadingClass(attrs),
               getCallbacks(attrs[CLICK_ATTR])));
       } else if (attrs.hasOwnProperty(SUBMIT_ATTR)) {
-          var buttons = $document.find('button');
+          eventName = SUBMIT_EVENT;
+          var buttons = element.find('button');
           if (buttons.length === 0) {
             throw new Error('ngAutodisable on a from requires buttons with \'type="submit"\'');
           }
@@ -85,8 +88,8 @@
 
       // Remove the click handler and replace it with our new one
       // with this move we completely disable the original ngClick functionality
-      angular.forEach(handlers, function (handler) {
-          element.unbind(handler.eventName).bind(handler.eventName, function (event) {
+      element.unbind(eventName).bind(eventName, function (event) {
+          angular.forEach(handlers, function (handler) {
               // Make sure we run the $digest cycle
               scope.$apply(function () {
                   handler.callbacks.forEach(triggerHandler.bind(null, handler, scope, event));
